@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>near-duplicate finder</title>
+<meta name="description" content="find near-duplicate names in a csv list, like 'Acme Ltd' vs 'ACME Limited'. runs in your browser. nothing is uploaded.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="near-duplicate finder">
+<meta property="og:title" content="near-duplicate finder">
+<meta property="og:description" content="find near-duplicate names in a csv list, like 'Acme Ltd' vs 'ACME Limited'. runs in your browser. nothing is uploaded.">
+<meta property="og:url" content="https://alvinaayaz.github.io/near-duplicate-finder/">
+<meta property="og:image" content="https://alvinaayaz.github.io/near-duplicate-finder/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="near-duplicate finder: Acme Ltd, ACME Limited, The Acme Company and Acme, Inc. become one company">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="near-duplicate finder">
+<meta name="twitter:description" content="find near-duplicate names in a csv list, like 'Acme Ltd' vs 'ACME Limited'. runs in your browser. nothing is uploaded.">
+<meta name="twitter:image" content="https://alvinaayaz.github.io/near-duplicate-finder/og-image.png">
+<meta name="twitter:image:alt" content="near-duplicate finder: Acme Ltd, ACME Limited, The Acme Company and Acme, Inc. become one company">
+<style>
+:root{--bg:#f6f4ef;--fg:#1d1a16;--card:#fff;--line:#e3ddd0;--accent:#2f6fed;--muted:#7a7365;--ok:#1a9b5a;--warn:#c7771a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#f1ebe0;--card:#201d17;--line:#38332a;--accent:#6b9bff;--muted:#a39a8a;--ok:#3cc884;--warn:#f0a850}}
+:root[data-theme="dark"]{--bg:#15130f;--fg:#f1ebe0;--card:#201d17;--line:#38332a;--accent:#6b9bff;--muted:#a39a8a;--ok:#3cc884;--warn:#f0a850}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45}
+main{max-width:720px;margin:0 auto;padding:24px 16px 56px}
+h1{font-size:1.6rem;margin:0;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:4px 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.pick{display:block;text-align:center;background:var(--accent);color:#fff;border-radius:12px;padding:14px;font-weight:700;cursor:pointer}
+.pick input{display:none}
+.note{color:var(--muted);font-size:.85rem;margin-top:10px;text-align:center}
+.link{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;text-decoration:underline;padding:0}
+#status{margin-top:10px;font-size:.9rem;color:var(--muted);text-align:center;min-height:1.2em}
+label{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+select{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:6px 8px;font:inherit;max-width:100%}
+input[type=range]{flex:1;min-width:140px}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:10px;padding:9px 14px;font-size:.9rem}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stat b{display:block;font-size:1.6rem}.stat span{font-size:.78rem;color:var(--muted)}
+.grp{border-top:1px solid var(--line);padding:12px 0;font-size:.92rem}.grp:first-child{border-top:0}
+.gh{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;color:var(--muted);font-size:.8rem}
+.r{display:flex;gap:8px;align-items:baseline;margin:3px 0;word-break:break-word}
+.r input{flex:none;accent-color:var(--accent)}
+.rn{flex:none;color:var(--muted);font-size:.75rem;min-width:46px}
+.sc{margin-left:auto;flex:none;color:var(--muted);font-size:.78rem;padding-left:8px}
+.keep{font-weight:700}.ign .r{opacity:.5}
+h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+<h1>🧹 near-duplicate finder</h1>
+<p class="sub">exact copies are easy. "Acme Ltd" vs "ACME Limited" is the real mess.</p>
+
+<div class="card">
+<label class="pick">Choose a CSV file<input id="f" type="file" accept=".csv,.tsv,.txt,text/csv"></label>
+<div class="note">or <button class="link" id="sample">try a sample list</button></div>
+<div class="note">Nothing is uploaded. Your list is read and compared inside your browser.</div>
+<div id="status"></div>
+</div>
+
+<div id="cfg" class="card hide">
+<label>Match on column <select id="col"></select></label>
+<label>Similarity <input id="th" type="range" min="70" max="100" value="85"> <b id="thv">85%</b></label>
+<div class="note" style="text-align:left">Names are cleaned first (case, punctuation, accents, words like Ltd, Inc, Pvt, The). Only names that start the same way or share an opening word are compared.</div>
+<div class="acts"><button class="btn pri" id="go">Find near-duplicates</button></div>
+</div>
+
+<div id="out" class="hide">
+<div class="card"><div class="stats">
+<div class="stat"><b id="s1">0</b><span>rows</span></div>
+<div class="stat"><b id="s2">0</b><span>groups found</span></div>
+<div class="stat"><b id="s3">0</b><span>rows to remove</span></div>
+</div></div>
+<div class="card">
+<h2>Pick the row to keep in each group</h2>
+<div id="groups"></div>
+<div class="acts">
+<button class="btn pri" id="dl">Download cleaned CSV</button>
+<button class="btn" id="cp">Copy cleaned CSV</button>
+<button class="btn" id="rp">Copy report</button>
+</div>
+<div class="note" style="text-align:left">Your original file is never changed. Rows are only removed from the exported copy. Tick "not duplicates" on a group to keep every row in it.</div>
+</div>
+</div>
+</main>
+<script>
+// ==core==
+const STOP=new Set('ltd limited llc inc incorporated corp corporation co company pvt private pty plc llp gmbh sa srl bv the and of'.split(' '));
+function detectDelim(t){const head=t.split(/\r?\n/).slice(0,5).join('\n');let best=',',bc=-1;for(const d of [',',';','\t','|']){const c=head.split(d).length-1;if(c>bc){bc=c;best=d}}return best}
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const delim=detectDelim(text);const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;
+    else if(c===delim){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);f='';rows.push(row);row=[]}
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  const clean=rows.filter(r=>r.length>1||(r[0]||'').trim()!=='');
+  const header=clean.shift()||[];const w=header.length;
+  return {delim,header,rows:clean.map(r=>{r=r.slice(0,Math.max(w,r.length));while(r.length<w)r.push('');return r})};
+}
+function norm(s){
+  s=String(s).normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}\s]/gu,' ');
+  const all=s.split(/\s+/).filter(Boolean);const kept=all.filter(t=>!STOP.has(t));
+  return kept.length?kept:all;
+}
+const mk=v=>{const toks=norm(v);return {toks,key:toks.join(' ')}};
+function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur}return prev[n]}
+function sim(x,y){
+  if(!x.key||!y.key)return 0;if(x.key===y.key)return 1;
+  const nums=t=>t.filter(w=>/\d/.test(w)).sort().join('|');
+  if(nums(x.toks)!==nums(y.toks))return 0; // Plant 1 vs Plant 2 are different
+  const sa=new Set(x.toks),sb=new Set(y.toks);let inter=0;for(const t of sa)if(sb.has(t))inter++;
+  const jac=inter/(sa.size+sb.size-inter);
+  const ls=1-lev(x.key,y.key)/Math.max(x.key.length,y.key.length);
+  const ks=x.toks.slice().sort().join(' '),kt=y.toks.slice().sort().join(' ');
+  const lt=1-lev(ks,kt)/Math.max(ks.length,kt.length);
+  return Math.max(jac,ls,lt);
+}
+function cluster(values,th){
+  const items=values.map(mk);const parent=items.map((_,i)=>i);
+  const find=x=>{while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x]}return x};
+  const uni=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[b]=a};
+  const idx=new Map();
+  items.forEach((it,i)=>{if(!it.key)return;const ks=new Set();it.toks.forEach(t=>ks.add('T'+t.slice(0,4)));ks.add('K'+it.key.slice(0,3));
+    ks.forEach(k=>{if(!idx.has(k))idx.set(k,[]);idx.get(k).push(i)})});
+  const seen=new Set();
+  for(const list of idx.values()){if(list.length>400)continue;
+    for(let a=0;a<list.length;a++)for(let b=a+1;b<list.length;b++){const i=list[a],j=list[b],id=i*1e6+j;if(seen.has(id))continue;seen.add(id);
+      if(sim(items[i],items[j])>=th)uni(i,j)}}
+  const groups=new Map();
+  items.forEach((it,i)=>{if(!it.key)return;const r=find(i);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(i)});
+  return [...groups.values()].filter(g=>g.length>1);
+}
+function toCSV(rows,delim){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /["\n\r]/.test(c)||c.includes(delim)?'"'+c.replace(/"/g,'""')+'"':c}).join(delim)).join('\r\n')}
+// ==end core==
+
+const $=id=>document.getElementById(id);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+let DATA=null,GROUPS=[];
+const SAMPLE='company,country,contact\nAcme Ltd,UK,anna@acme.com\nACME Limited,UK,\n"Acme, Inc.",US,\nThe Acme Company,United Kingdom,sales@acme.com\nGlobex Corporation,US,hank@globex.com\nGlobex Corp,US,\nInitech,US,peter@initech.com\nInitrode,US,\nUmbrella Pvt Ltd,PK,\nUmbrela Pvt. Ltd,PK,uma@umbrella.pk\nWayne Enterprises,US,\nStark Industries,US,tony@stark.com\n';
+
+function load(text,name){
+  DATA=parseCSV(text);
+  if(!DATA.header.length||!DATA.rows.length){$('status').textContent='That file has no rows I can read.';return}
+  $('status').textContent=name+': '+DATA.rows.length+' rows, '+DATA.header.length+' columns.';
+  const sel=$('col');sel.innerHTML='';
+  DATA.header.forEach((h,i)=>{const o=el('option',null,h||('column '+(i+1)));o.value=i;sel.appendChild(o)});
+  const pref=DATA.header.findIndex(h=>/company|organi[sz]ation|business|firm|client|exhibitor|account|name/i.test(h));
+  sel.value=pref>=0?pref:0;
+  $('cfg').classList.remove('hide');$('out').classList.add('hide');
+}
+$('f').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>load(String(r.result),f.name);r.readAsText(f)});
+$('sample').addEventListener('click',()=>load(SAMPLE,'sample list'));
+$('th').addEventListener('input',e=>{$('thv').textContent=e.target.value+'%'});
+
+$('go').addEventListener('click',()=>{
+  const ci=+$('col').value,th=+$('th').value/100;
+  const vals=DATA.rows.map(r=>r[ci]||'');
+  GROUPS=cluster(vals,th).map(idxs=>{
+    let best=idxs[0],bf=-1;
+    for(const i of idxs){const f=DATA.rows[i].filter(c=>String(c).trim()!=='').length;if(f>bf){bf=f;best=i}}
+    return {idxs,keep:best,ignore:false};
+  });
+  GROUPS.sort((a,b)=>b.idxs.length-a.idxs.length);
+  draw(ci);$('out').classList.remove('hide');
+});
+
+function draw(ci){
+  const box=$('groups');box.innerHTML='';
+  if(!GROUPS.length)box.appendChild(el('div','note','No near-duplicates at this similarity. Try lowering it a little.'));
+  GROUPS.forEach((g,n)=>{
+    const d=el('div','grp'+(g.ignore?' ign':''));
+    const h=el('div','gh');h.appendChild(el('span',null,'group '+(n+1)+' · '+g.idxs.length+' rows'));
+    const lab=el('label');lab.style.margin='0';const cb=document.createElement('input');cb.type='checkbox';cb.checked=g.ignore;
+    cb.onchange=()=>{g.ignore=cb.checked;d.className='grp'+(g.ignore?' ign':'');stats()};lab.append(cb,'not duplicates');h.appendChild(lab);d.appendChild(h);
+    const rep=mk(DATA.rows[g.keep][ci]);
+    g.idxs.forEach(i=>{
+      const row=el('div','r');const rb=document.createElement('input');rb.type='radio';rb.name='g'+n;rb.checked=(i===g.keep);
+      rb.onchange=()=>{g.keep=i;stats()};
+      row.appendChild(rb);row.appendChild(el('span','rn','row '+(i+2)));
+      row.appendChild(el('span',null,DATA.rows[i][ci]));
+      row.appendChild(el('span','sc',Math.round(sim(rep,mk(DATA.rows[i][ci]))*100)+'%'));
+      d.appendChild(row);
+    });
+    box.appendChild(d);
+  });
+  stats();
+}
+function removed(){const s=new Set();GROUPS.forEach(g=>{if(!g.ignore)g.idxs.forEach(i=>{if(i!==g.keep)s.add(i)})});return s}
+function stats(){$('s1').textContent=DATA.rows.length;$('s2').textContent=GROUPS.filter(g=>!g.ignore).length;$('s3').textContent=removed().size}
+function cleaned(){const rm=removed();return toCSV([DATA.header].concat(DATA.rows.filter((_,i)=>!rm.has(i))),DATA.delim)}
+function report(){
+  const ci=+$('col').value;const out=['near-duplicate report ('+removed().size+' rows to remove, '+DATA.rows.length+' rows)',''];
+  GROUPS.forEach((g,n)=>{if(g.ignore)return;out.push('group '+(n+1)+': keep row '+(g.keep+2)+' "'+DATA.rows[g.keep][ci]+'"');
+    g.idxs.filter(i=>i!==g.keep).forEach(i=>out.push('  remove row '+(i+2)+' "'+DATA.rows[i][ci]+'"'));out.push('')});
+  return out.join('\n');
+}
+async function copyText(t,btn){
+  const old=btn.textContent;
+  try{await navigator.clipboard.writeText(t);btn.textContent='Copied ✓'}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');btn.textContent='Copied ✓'}catch(_){btn.textContent='Could not copy'}ta.remove()}
+  setTimeout(()=>{btn.textContent=old},1800);
+}
+$('cp').addEventListener('click',e=>copyText(cleaned(),e.target));
+$('rp').addEventListener('click',e=>copyText(report(),e.target));
+$('dl').addEventListener('click',()=>{
+  try{const b=new Blob([cleaned()],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);a.download='cleaned.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+  catch(e){$('status').textContent='Download is blocked here. Use "Copy cleaned CSV" instead.'}
+});
+</script>
+</body>
+</html>
