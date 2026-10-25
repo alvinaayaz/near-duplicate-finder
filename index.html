@@ -71,6 +71,7 @@ h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--mu
 
 <div id="cfg" class="card hide">
 <label>Match on column <select id="col"></select></label>
+<div class="note" id="colhint" style="text-align:left;color:var(--warn)"></div>
 <label>Similarity <input id="th" type="range" min="70" max="100" value="85"> <b id="thv">85%</b></label>
 <div class="note" style="text-align:left">Names are cleaned first (case, punctuation, accents, words like Ltd, Inc, Pvt, The). Only names that start the same way or share an opening word are compared.</div>
 <div class="acts"><button class="btn pri" id="go">Find near-duplicates</button></div>
@@ -154,11 +155,24 @@ function cluster(values,th){
   return [...groups.values()].filter(g=>g.length>1);
 }
 function toCSV(rows,delim){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /["\n\r]/.test(c)||c.includes(delim)?'"'+c.replace(/"/g,'""')+'"':c}).join(delim)).join('\r\n')}
+function guessColumn(header,rows){
+  const byName=header.findIndex(h=>/company|organi[sz]ation|business|firm|client|exhibitor|account|security|issuer|vendor|supplier|customer|employer|brand|name/i.test(h));
+  if(byName>=0)return byName;
+  let best=0,bs=-1;
+  header.forEach((h,c)=>{const v=rows.map(r=>String(r[c]||'').trim()).filter(Boolean);if(!v.length)return;
+    if(v.filter(x=>/^[\d\s.,:\/\-+]+$/.test(x)||x.includes('@')).length/v.length>0.5)return;
+    const distinct=new Set(v.map(x=>x.toLowerCase())).size/v.length,avg=v.reduce((a,x)=>a+x.length,0)/v.length;
+    const sc=distinct*Math.min(avg,30);if(sc>bs){bs=sc;best=c}});
+  return best;
+}
+function looksLikeCodes(vals){const v=vals.map(x=>String(x||'').trim()).filter(Boolean);if(!v.length)return false;
+  const avg=v.reduce((a,x)=>a+x.length,0)/v.length,num=v.filter(x=>/^[\d\s.,:\/\-+]+$/.test(x)).length/v.length;return avg<=6||num>0.5}
 // ==end core==
 
 const $=id=>document.getElementById(id);
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 let DATA=null,GROUPS=[];
+function hint(){const ci=+$('col').value;$('colhint').textContent=looksLikeCodes(DATA.rows.map(r=>r[ci]))?'This column looks like short codes or numbers, not names. Pick the column that holds the names.':''}
 const SAMPLE='company,country,contact\nAcme Ltd,UK,anna@acme.com\nACME Limited,UK,\n"Acme, Inc.",US,\nThe Acme Company,United Kingdom,sales@acme.com\nGlobex Corporation,US,hank@globex.com\nGlobex Corp,US,\nInitech,US,peter@initech.com\nInitrode,US,\nUmbrella Pvt Ltd,PK,\nUmbrela Pvt. Ltd,PK,uma@umbrella.pk\nWayne Enterprises,US,\nStark Industries,US,tony@stark.com\n';
 
 function load(text,name){
@@ -167,13 +181,13 @@ function load(text,name){
   $('status').textContent=name+': '+DATA.rows.length+' rows, '+DATA.header.length+' columns.';
   const sel=$('col');sel.innerHTML='';
   DATA.header.forEach((h,i)=>{const o=el('option',null,h||('column '+(i+1)));o.value=i;sel.appendChild(o)});
-  const pref=DATA.header.findIndex(h=>/company|organi[sz]ation|business|firm|client|exhibitor|account|name/i.test(h));
-  sel.value=pref>=0?pref:0;
+  sel.value=guessColumn(DATA.header,DATA.rows);hint();
   $('cfg').classList.remove('hide');$('out').classList.add('hide');
 }
 $('f').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>load(String(r.result),f.name);r.readAsText(f)});
 $('sample').addEventListener('click',()=>load(SAMPLE,'sample list'));
 $('th').addEventListener('input',e=>{$('thv').textContent=e.target.value+'%'});
+$('col').addEventListener('change',hint);
 
 $('go').addEventListener('click',()=>{
   const ci=+$('col').value,th=+$('th').value/100;

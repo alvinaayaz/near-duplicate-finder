@@ -11,7 +11,7 @@ Built with AI's help. This is the next step after my [downloads-toolkit](https:/
 ## How to use it
 
 1. Choose a CSV file, or click "try a sample list".
-2. Pick the column to match on. It guesses a column called company, name, organisation, client and so on.
+2. Pick the column to match on. It guesses a column called company, name, security, client and so on, or else the column that looks most like names. If the column you pick looks like short codes (tickers, IDs), it warns you.
 3. Set the similarity (85% is the default) and click "Find near-duplicates".
 4. In each group, pick the row to keep. The default is the row with the most filled cells. Tick "not duplicates" to keep every row in a group.
 5. Download or copy the cleaned CSV. Your original file is never changed.
