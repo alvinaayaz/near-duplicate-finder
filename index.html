@@ -1,144 +1,538 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>tidy — clean a messy csv or excel sheet</title>
-<meta name="description" content="Clean a messy spreadsheet in your browser. Standardize text, phones and emails, remove blank and duplicate rows, and review changes before downloading.">
-<link rel="canonical" href="https://alvinaayaz.github.io/tidy/">
+<title>Near Duplicate Finder — Clean your CSV</title>
+<meta name="theme-color" content="#f4f7fb">
+<meta name="description" content="find near-duplicate names in a csv list, like 'Acme Ltd' vs 'ACME Limited'. runs in your browser. nothing is uploaded.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="tidy">
-<meta property="og:title" content="tidy — clean a messy csv or excel sheet">
-<meta property="og:description" content="Clean a messy spreadsheet in your browser. Your spreadsheet data stays on your device.">
-<meta property="og:url" content="https://alvinaayaz.github.io/tidy/">
-<meta property="og:image" content="https://alvinaayaz.github.io/tidy/og-image.png">
+<meta property="og:site_name" content="near-duplicate finder">
+<meta property="og:title" content="near-duplicate finder">
+<meta property="og:description" content="find near-duplicate names in a csv list, like 'Acme Ltd' vs 'ACME Limited'. runs in your browser. nothing is uploaded.">
+<meta property="og:url" content="https://alvinaayaz.github.io/near-duplicate-finder/">
+<meta property="og:image" content="https://alvinaayaz.github.io/near-duplicate-finder/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="tidy spreadsheet cleaner">
+<meta property="og:image:alt" content="near-duplicate finder: Acme Ltd, ACME Limited, The Acme Company and Acme, Inc. become one company">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="tidy — clean a messy csv or excel sheet">
-<meta name="twitter:description" content="Clean a messy spreadsheet in your browser. Your spreadsheet data stays on your device.">
-<meta name="twitter:image" content="https://alvinaayaz.github.io/tidy/og-image.png">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<meta name="twitter:title" content="near-duplicate finder">
+<meta name="twitter:description" content="find near-duplicate names in a csv list, like 'Acme Ltd' vs 'ACME Limited'. runs in your browser. nothing is uploaded.">
+<meta name="twitter:image" content="https://alvinaayaz.github.io/near-duplicate-finder/og-image.png">
+<meta name="twitter:image:alt" content="near-duplicate finder: Acme Ltd, ACME Limited, The Acme Company and Acme, Inc. become one company">
 <style>
-:root{--bg:#edf1ee;--ink:#17231c;--soft:#566559;--line:#17231c2e;--card:#f8faf8;--ok:#1f7a4d;--bad:#b3402a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a14;--ink:#e5efe8;--soft:#93a69a;--line:#e5efe833;--card:#16241c;--ok:#5fd09a;--bad:#ff8a70}}
-:root[data-theme="dark"]{--bg:#101a14;--ink:#e5efe8;--soft:#93a69a;--line:#e5efe833;--card:#16241c;--ok:#5fd09a;--bad:#ff8a70}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 'Bricolage Grotesque',system-ui,sans-serif}
-main{max-width:820px;margin:0 auto;padding:36px 20px 80px}h1{font:800 clamp(40px,10vw,76px)/.95 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.04em;margin:0 0 10px}
-.sub{color:var(--soft);margin:0 0 26px;max-width:60ch}#drop{display:block;border:2px dashed var(--ink);border-radius:6px;padding:34px 18px;text-align:center;cursor:pointer;background:var(--card)}#drop.over{border-style:solid;background:var(--bg)}#drop:focus-within{outline:2px solid var(--ok);outline-offset:2px}#drop input{position:absolute;opacity:0;width:1px;height:1px}#drop b{font-weight:800;font-size:20px;display:block}#drop span{color:var(--soft)}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 18px;margin:20px 0 6px}.opts label{display:flex;gap:9px;align-items:flex-start}.opts input{margin-top:5px;accent-color:var(--ok)}
-.cc{margin:6px 0 18px;color:var(--soft);font-size:15px}.cc input{width:85px;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:3px 8px}
-button{font:inherit;font-weight:600;cursor:pointer;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:4px;padding:11px 18px;margin:3px 3px 3px 0}button:focus-visible{outline:2px solid var(--ok);outline-offset:2px}button:disabled{opacity:.4;cursor:not-allowed}
-#res{display:none;margin-top:30px;border-top:2px solid var(--ink);padding-top:18px}.big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}.big b{font:800 clamp(44px,11vw,84px)/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.04em}.big i{font-style:normal;color:var(--ok);font-weight:800}.big span{color:var(--soft)}
-ul{margin:12px 0 18px;padding-left:20px}li{margin:3px 0}.tw{overflow-x:auto;border:1px solid var(--line);border-radius:4px;margin-bottom:16px;background:var(--card)}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{background:var(--bg)}td.flag{color:var(--bad)}.note{color:var(--soft);font-size:14px;margin-top:22px}
-.cc select,.maplist select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:4px 8px}.maplist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;margin:8px 0 18px}.maplist div{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:4px 0}.maplist span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stats{display:flex;gap:26px;flex-wrap:wrap;margin:16px 0}.stats b{display:block;font-weight:800;font-size:28px;line-height:1.1}.stats span{color:var(--soft);font-size:14px}#status{min-height:1.5em;color:var(--bad);margin:8px 0}.small{font-size:13px;color:var(--soft)}
+:root{color-scheme:light;--bg:#f4f7fb;--fg:#172033;--card:#fff;--line:#e3e9f2;--accent:#4f46e5;--accent-dark:#3730a3;--muted:#667085;--ok:#087f5b;--warn:#b45309;--soft:#eef2ff;--shadow:0 12px 34px rgba(22,34,60,.055);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0b1220;--fg:#e8edf8;--card:#121c2d;--line:#26344b;--accent:#8b83ff;--accent-dark:#a9a3ff;--muted:#9aa8bf;--ok:#5bd6aa;--warn:#f7bd66;--soft:#242545;--shadow:0 12px 34px rgba(0,0,0,.18)}
+*{box-sizing:border-box}html{scroll-padding-top:20px;scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 10% 0%,rgba(99,102,241,.08),transparent 35%),var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}main{max-width:1040px;margin:0 auto;padding:30px 24px 72px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:40px}.brand{display:flex;align-items:center;gap:12px}.brandmark{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#625bf6,#4338ca);color:white;font-weight:850;font-size:1rem;box-shadow:0 7px 16px rgba(79,70,229,.22)}.brandname{font-size:.98rem;font-weight:800;letter-spacing:-.025em}.brandmeta{font-size:.76rem;color:var(--muted);margin-top:1px}.privacy-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:.78rem;font-weight:650}.privacy-dot{width:7px;height:7px;border-radius:50%;background:#10b981}
+.hero{max-width:760px;margin:0 auto 28px;text-align:center}.eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--accent);background:var(--soft);border-radius:999px;padding:6px 11px;font-size:.75rem;font-weight:800;letter-spacing:.055em;text-transform:uppercase;margin-bottom:14px}.hero h1{font-size:clamp(2rem,4vw,3.1rem);line-height:1.08;letter-spacing:-.055em;margin:0;font-weight:850}.hero h1 span{color:var(--accent)}.sub{color:var(--muted);font-size:1.04rem;max-width:620px;margin:14px auto 0;line-height:1.7}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;margin-bottom:16px;box-shadow:var(--shadow)}.upload-card{max-width:790px;margin:0 auto 16px}.section-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}.section-icon{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:13px;background:var(--soft);color:var(--accent);font-size:1.2rem;font-weight:800}.section-head h2{font-size:1rem;text-transform:none;letter-spacing:-.02em;color:var(--fg);margin:1px 0 4px}.section-head p{margin:0;color:var(--muted);font-size:.88rem}.pick{display:flex;align-items:center;justify-content:center;gap:10px;min-height:64px;text-align:center;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:14px;padding:16px 20px;font-weight:750;cursor:pointer;transition:transform .16s,background .16s,box-shadow .16s;box-shadow:0 8px 16px rgba(79,70,229,.16)}.pick:hover{background:var(--accent-dark);transform:translateY(-1px)}.pick input{display:none}.upload-symbol{font-size:1.3rem}.upload-sub{margin:10px 0 0;text-align:center;color:var(--muted);font-size:.82rem}.link{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;text-decoration:none;padding:0}.link:hover{text-decoration:underline}#status{margin-top:14px;font-size:.88rem;color:var(--muted);text-align:center;min-height:1.2em}.note{color:var(--muted);font-size:.82rem;margin-top:9px;text-align:center;line-height:1.55}
+#cfg{max-width:790px;margin:0 auto 22px}.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}.config-field{display:flex;flex-direction:column;gap:7px;margin:0;font-size:.86rem;font-weight:700}.config-field select,.config-field input:not([type=range]){width:100%}select{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:10px;padding:10px 12px;font:inherit;max-width:100%;min-height:42px}input[type=range]{width:100%;accent-color:var(--accent);margin:6px 0}.range-row{display:flex;align-items:center;gap:12px}.range-row b{color:var(--accent);font-variant-numeric:tabular-nums;min-width:44px;text-align:right}.field-help{font-size:.78rem;color:var(--muted);font-weight:400;line-height:1.5}.full{grid-column:1/-1}.config-footer{margin-top:18px;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}.config-footer .note{text-align:left;margin:0;max-width:500px}
+button{font:inherit;cursor:pointer}.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:11px;padding:10px 15px;font-size:.86rem;font-weight:700;transition:border-color .15s,transform .15s,background .15s}.btn:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:800}.btn.pri:hover{background:var(--accent-dark)}.btn:disabled{opacity:.38;cursor:not-allowed}.acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.hide{display:none!important}
+#out{margin-top:26px}.stats-card{padding:0;overflow:hidden}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));text-align:left}.stat{padding:23px 26px;position:relative}.stat+.stat{border-left:1px solid var(--line)}.stat b{display:block;font-size:2rem;line-height:1.15;letter-spacing:-.04em;font-weight:850;font-variant-numeric:tabular-nums}.stat span{display:block;font-size:.8rem;color:var(--muted);margin-top:7px;font-weight:650}.stat:nth-child(3) b{color:var(--ok)}.stat:nth-child(4) b{color:var(--warn)}.results-card{padding:24px}.results-title{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.results-title h2{font-size:1.12rem;letter-spacing:-.025em;text-transform:none;color:var(--fg);margin:0 0 5px}.results-title p{font-size:.85rem;color:var(--muted);margin:0}.history{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px}.tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,.48fr);gap:10px;margin:12px 0 14px}.tools input,.tools select{width:100%;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:11px;padding:11px 13px;font:inherit;font-size:.88rem}.tools input:focus,.tools select:focus,select:focus{outline:3px solid rgba(99,102,241,.15);border-color:var(--accent)}.filter-count{font-size:.8rem;color:var(--muted);margin:0}.review-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 6px;flex-wrap:wrap}.review-toolbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.next-review-btn{white-space:nowrap}.preview-explanation{font-size:.72rem;color:var(--muted);font-weight:700}.confirm-preview{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:11px;margin:12px 0;background:var(--bg)}.confirm-preview summary{cursor:pointer;padding:11px 12px;font-size:.84rem;font-weight:800}.confirm-preview-list{padding:0 12px 12px}.confirm-group{border-top:1px solid var(--line);padding:10px 0;font-size:.8rem}.confirm-group b{display:block;margin-bottom:4px}.confirm-group .will-keep{color:var(--ok)}.confirm-group .will-remove{color:var(--warn)}.confirm-group div{overflow-wrap:anywhere}.preview-reason-line{display:block;font-size:.72rem;color:var(--muted);font-weight:650;margin-top:5px}.toolbar-tip{font-size:.75rem;color:var(--muted)}.grp{border:1px solid var(--line);border-radius:14px;padding:0;margin:9px 0;background:var(--card);font-size:.9rem;transition:border-color .15s,box-shadow .15s;overflow:hidden}.grp:hover{border-color:color-mix(in srgb,var(--accent) 42%,var(--line));box-shadow:0 5px 18px rgba(22,34,60,.045)}.grp.ign{background:color-mix(in srgb,var(--muted) 4%,var(--card))}.gh{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 15px;margin:0;color:var(--muted);font-size:.76rem;background:color-mix(in srgb,var(--bg) 55%,var(--card));border-bottom:1px solid var(--line)}.gh>span{font-weight:750;letter-spacing:.015em}.group-preview{display:flex;align-items:center;gap:9px;padding:13px 15px;min-width:0;cursor:pointer;outline-offset:-3px}.group-preview:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 40%,transparent)}.preview-names{font-weight:750;letter-spacing:-.015em;min-width:0;overflow-wrap:anywhere}.preview-arrow{color:var(--muted);flex:none}.preview-meta{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none}.status-chip{font-size:.7rem;font-weight:800;border-radius:999px;padding:4px 8px;white-space:nowrap;background:color-mix(in srgb,var(--ok) 10%,var(--card));color:var(--ok)}.status-chip.review{background:color-mix(in srgb,var(--warn) 12%,var(--card));color:var(--warn)}.status-chip.share-class{background:color-mix(in srgb,#7c3aed 12%,var(--card));color:#7c3aed}.status-chip.changed{background:color-mix(in srgb,var(--accent) 12%,var(--card));color:var(--accent)}.match-reason{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.reason-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:.73rem;font-weight:750;color:var(--muted);background:var(--bg)}.reason-chip.confidence{color:var(--fg)}.review-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);font-size:.82rem}.review-summary strong{font-variant-numeric:tabular-nums}.review-summary .unresolved{color:var(--warn);font-weight:800}.keep-all-label{display:flex;align-items:center;gap:7px;white-space:nowrap}.keep-all-label input{width:16px;height:16px;accent-color:var(--accent)}.decision-hint{font-size:.72rem;color:var(--muted);font-weight:500}.review-reason{font-size:.82rem;line-height:1.5;color:var(--muted);margin:0 0 10px}.grp.ign .gh{background:color-mix(in srgb,var(--muted) 7%,var(--card))}.grp.flagged{border-left:3px solid var(--warn)}.grp.shareflag{border-left:3px solid #7c3aed}.grp.changed{box-shadow:inset 3px 0 var(--accent)}.confirm-backdrop{position:fixed;inset:0;z-index:20;background:rgba(10,15,30,.56);display:grid;place-items:center;padding:18px}.confirm-panel{width:min(520px,100%);max-height:88vh;overflow-y:auto;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.25)}.confirm-panel h2{font-size:1.2rem;margin:0 0 7px}.confirm-panel p{color:var(--muted);font-size:.9rem;margin:0 0 13px}.confirm-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}.confirm-count{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px}.confirm-count b{display:block;font-size:1.3rem}.confirm-count span{display:block;font-size:.72rem;color:var(--muted)}.confirm-warning{background:color-mix(in srgb,var(--warn) 10%,var(--card));border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line));border-radius:10px;padding:11px 12px;font-size:.82rem;margin:12px 0}.confirm-panel .acts{justify-content:flex-end}.confirm-panel .btn{min-width:115px}.expand-hint{color:var(--muted);font-size:.75rem;flex:none}.group-body{border-top:1px solid var(--line);padding:13px 15px 15px}.gh label{display:flex;align-items:center;gap:7px;margin:0;font-size:.78rem;color:var(--fg);font-weight:650}.r{display:flex;gap:10px;align-items:center;margin:8px 0;word-break:break-word;padding:9px 10px;border-radius:9px;background:var(--bg);min-height:40px}.r input{flex:none;accent-color:var(--accent);width:16px;height:16px}.rn{flex:none;color:var(--muted);font-size:.73rem;min-width:52px;font-variant-numeric:tabular-nums}.sc{margin-left:auto;flex:none;color:var(--muted);font-size:.76rem;padding-left:8px;font-variant-numeric:tabular-nums}.keep{font-weight:700}.ign .r{opacity:.62}.compare{margin:13px 0 1px;border:1px solid var(--line);border-radius:11px;padding:12px}.compare summary{cursor:pointer;font-weight:750;font-size:.82rem;color:var(--accent)}.compare table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:10px;table-layout:fixed}.compare th,.compare td{border:1px solid var(--line);padding:8px;vertical-align:top;overflow-wrap:anywhere;text-align:left}.compare th{background:var(--bg)}.compare .diff{background:color-mix(in srgb,var(--warn) 13%,var(--card))}.id-hint-box{padding:11px 13px;background:var(--bg);border-radius:10px}.output-actions{padding-top:17px;margin-top:18px;border-top:1px solid var(--line);position:sticky;bottom:8px;background:color-mix(in srgb,var(--card) 94%,transparent);backdrop-filter:blur(12px);padding:14px;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(22,34,60,.08);z-index:3}.footer-note{text-align:left!important;margin-top:13px!important;max-width:820px}button:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 35%,transparent);outline-offset:2px}
+@media(max-width:650px){.confirm-panel{padding:18px}.confirm-counts{gap:6px}.confirm-count{padding:9px}.confirm-count b{font-size:1.1rem}.review-summary{align-items:flex-start}.preview-meta{flex-wrap:wrap}main{padding:20px 14px 48px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(3){border-left:0}.stat:nth-child(3),.stat:nth-child(4){border-top:1px solid var(--line)}.stat:nth-child(4){border-left:1px solid var(--line)}.topbar{margin-bottom:28px}.privacy-pill{font-size:0;padding:9px}.privacy-pill .privacy-text{display:none}.hero{margin-bottom:23px}.hero h1{font-size:2.2rem}.sub{font-size:.94rem}.card{padding:18px;border-radius:16px}.config-grid{grid-template-columns:1fr}.full{grid-column:auto}.config-footer{align-items:stretch;flex-direction:column}.config-footer .note{text-align:center}.config-footer .btn{width:100%}.stat{padding:18px 14px}.stat b{font-size:1.55rem}.stat span{font-size:.72rem}.results-title{display:block}.results-title .history{margin-top:14px}.tools{grid-template-columns:1fr}.gh{align-items:flex-start;flex-direction:row}.group-preview{align-items:flex-start;flex-wrap:wrap}.preview-meta{margin-left:0;width:100%;justify-content:flex-start}.preview-explanation{white-space:normal}.preview-names{font-size:.88rem}.group-body{padding:11px}.r{gap:7px;padding:8px 6px}.rn{min-width:44px}.sc{font-size:.72rem}.compare{overflow-x:auto}.compare table{min-width:480px}.acts .btn{flex:1 1 140px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+.hidden-char-detail{margin-top:7px;padding:6px 8px;border-radius:6px;background:var(--soft);font: .72rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;color:var(--muted);white-space:normal}
 </style>
 </head>
 <body>
 <main>
-<h1>tidy.</h1>
-<p class="sub">drop in a messy csv or excel sheet. clean the parts that need fixing, review what changed, then download your file. your spreadsheet data is processed in your browser. reads csv (comma, semicolon or tab) and excel.</p>
-<label id="drop"><input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv"><b>choose a csv or excel file</b><span>or drag it here · up to 50 MB</span></label>
-<p id="status" role="alert"></p>
-<div class="opts">
-<label><input type="checkbox" id="oTrim" checked> trim extra spaces and collapse doubles</label>
-<label><input type="checkbox" id="oBlank" checked> remove completely blank rows</label>
-<label><input type="checkbox" id="oDup" checked> remove duplicate rows (ignores upper/lower case)</label>
-<label><input type="checkbox" id="oPhone" checked> standardize phone numbers (in columns marked phone)</label>
-<label><input type="checkbox" id="oMail" checked> lowercase emails and flag invalid formats (in columns marked email)</label>
-</div>
-<div id="map" style="display:none"><h2>columns</h2><p class="cc">we guessed what each column is. fix any that are wrong.</p><div id="mapList" class="maplist"></div></div>
-<p class="cc">country for numbers that start with 0: <select id="ccSel" aria-label="country"><option value="+92">Pakistan +92</option><option value="+91">India +91</option><option value="+880">Bangladesh +880</option><option value="+44">United Kingdom +44</option><option value="+1">US / Canada +1</option><option value="+971">UAE +971</option><option value="+966">Saudi Arabia +966</option><option value="+61">Australia +61</option><option value="+49">Germany +49</option><option value="+90">Turkey +90</option><option value="+234">Nigeria +234</option><option value="other">other…</option></select> <input id="cc" value="+" style="display:none" aria-label="country code"></p>
-<button id="go" disabled>clean it</button>
-<div id="res" aria-live="polite">
-<div class="big"><b id="rBefore">0</b><span>rows in</span><i>→</i><b id="rAfter">0</b><span>rows out</span></div>
-<div class="stats" id="rStats"></div><ul id="rLog"></ul>
-<p class="note" id="pvNote"></p><div class="tw"><table id="rTab"></table></div>
-<button id="dl">download cleaned csv</button> <button id="dlx" style="background:transparent;color:var(--ink)">download as excel</button> <button id="dlReport" style="background:transparent;color:var(--ink)">download change report</button>
-<p class="note">rows with a problem we can't confidently fix stay in the file and get a note in a new attention column. blank and exact duplicate rows are removed only when those options are selected. phone checks are cautious format checks, not proof that a number is active.</p>
-<p class="small" id="reportNote"></p>
-</div>
+  <header class="topbar">
+    <div class="brand"><div class="brandmark" aria-hidden="true">ND</div><div><div class="brandname">Near Duplicate Finder</div><div class="brandmeta">CSV cleanup workspace · v13</div></div></div>
+    <div class="privacy-pill"><span class="privacy-dot"></span><span class="privacy-text">Private by design · runs in your browser</span></div>
+  </header>
+  <section class="hero">
+    <div class="eyebrow"><span aria-hidden="true">✳</span> Clean data, confidently</div>
+    <h1>Find duplicates.<br><span>Keep the right records.</span></h1>
+    <p class="sub">Spot company names that look alike, review the differences, and export a cleaner CSV — without uploading your data anywhere.</p>
+  </section>
+  <section class="card upload-card" aria-label="Upload CSV">
+    <div class="section-head"><div class="section-icon" aria-hidden="true">↑</div><div><h2>Start with your file</h2><p>Choose a CSV, TSV, or text file to scan for similar names.</p></div></div>
+    <label class="pick"><span class="upload-symbol" aria-hidden="true">＋</span><span>Choose a CSV file<input id="f" type="file" accept=".csv,.tsv,.txt,text/csv"></span></label>
+    <p class="upload-sub">No file to hand? <button class="link" id="sample">Try a sample list</button></p>
+    <div id="status" role="status" aria-live="polite"></div>
+  </section>
+  <section id="cfg" class="card hide">
+    <div class="section-head"><div class="section-icon" aria-hidden="true">⚙</div><div><h2>Configure your scan</h2><p>Choose what counts as a match before reviewing the results.</p></div></div>
+    <div class="config-grid">
+      <label class="config-field">Company / name column <select id="col"></select><span class="field-help">The column containing the names you want to compare.</span></label>
+      <label class="config-field">Similarity threshold <div class="range-row"><input id="th" type="range" min="70" max="100" value="85"><b id="thv">85%</b></div><span class="field-help">Higher is stricter. Lower may find more spelling variations.</span></label>
+      <label class="config-field full">Require identifier columns to match <select id="ids" multiple size="3" aria-label="Optional identifier columns"></select><span class="field-help id-hint-box">Optional. Select ticker, customer ID, email, registration number, or another reliable identifier. Every selected field must be non-empty and match exactly. Use Ctrl (Windows) or Command (Mac) to select multiple columns.</span></label>
+    </div>
+    <div class="note" id="colhint" style="text-align:left;color:var(--warn)"></div>
+    <div class="config-footer"><p class="note">Names are normalized for case, punctuation, accents, and common legal suffixes. Similarity is a clue, not proof that two records are the same entity.</p><button class="btn pri" id="go">Find near-duplicates <span aria-hidden="true">→</span></button></div>
+  </section>
+  <section id="out" class="hide" aria-label="Duplicate review results">
+    <div class="card stats-card"><div class="stats">
+      <div class="stat"><b id="s1">0</b><span>Rows scanned</span></div>
+      <div class="stat"><b id="s2">0</b><span>Matching groups</span></div>
+      <div class="stat"><b id="s3">0</b><span>Rows kept in export</span></div>
+      <div class="stat"><b id="s4">0</b><span>Rows marked for removal</span></div>
+    </div><p id="matchMethodNote" class="note footer-note" aria-live="polite"></p></div>
+    <div class="card results-card">
+      <div class="results-title"><div><h2>Review matching groups</h2><p>Choose a keeper, compare all fields, or preserve a group if the records are distinct.</p></div></div>
+      <div class="history"><button class="btn" id="undo" disabled><span aria-hidden="true">↶</span> Undo</button><button class="btn" id="redo" disabled><span aria-hidden="true">↷</span> Redo</button></div>
+      <div class="tools"><input id="searchGroups" type="search" placeholder="Search company names…" aria-label="Search groups"><select id="filterGroups" aria-label="Filter groups"><option value="all">All groups</option><option value="likely">Likely duplicates</option><option value="review">Review recommended</option><option value="share-class">Share-class warnings</option><option value="preserved">Keep all rows</option><option value="remove">Will remove rows</option><option value="changed">Manually changed decisions</option><option value="unresolved">Needs review</option></select></div>
+      <div class="review-summary" id="reviewSummary" aria-live="polite"></div>
+      <div class="review-toolbar"><div id="filterCount" class="filter-count"></div><div class="review-toolbar-actions"><span class="toolbar-tip">Open a group to inspect records</span><button class="btn" id="approveVariations" type="button">Approve all name variations</button><button class="btn next-review-btn" id="nextReview" type="button">Review next group · 0</button></div></div>
+      <div id="groups"></div>
+      <div class="acts output-actions"><button class="btn pri" id="dl">↓ Download cleaned CSV</button><button class="btn" id="cp">Copy cleaned CSV</button><button class="btn" id="rp">Copy audit report</button><button class="btn" id="auditDl">↓ Download audit report</button></div>
+      <p class="note footer-note">Your original file is never changed. Rows are only removed from the exported copy. Choose “Keep all rows” when records are distinct. Review flagged matches before exporting; the final download step summarizes what will be removed. The cleaned CSV protects spreadsheet formula-leading cells with an apostrophe, which may make those exported cells text.</p>
+    </div>
+  </section>
 </main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<div id="exportConfirm" class="confirm-backdrop hide" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc">
+  <div class="confirm-panel">
+    <h2 id="confirmTitle">Review your export</h2>
+    <p id="confirmDesc">The cleaned CSV keeps every ungrouped row. For each matching group, it either keeps every row or keeps the selected keeper and removes the other rows. Review the exact group decisions below before downloading.</p>
+    <div class="confirm-counts">
+      <div class="confirm-count"><b id="confirmKeep">0</b><span>Rows kept</span></div>
+      <div class="confirm-count"><b id="confirmRemove">0</b><span>Rows removed</span></div>
+      <div class="confirm-count"><b id="confirmReview">0</b><span>Groups to review</span></div>
+    </div>
+    <div id="confirmWarning" class="confirm-warning hide"></div>
+    <details class="confirm-preview"><summary>Preview exact rows kept and removed</summary><div id="confirmPreview" class="confirm-preview-list"></div></details>
+    <p>Only the exported copy changes. Your original CSV remains untouched.</p>
+    <div class="acts"><button class="btn" id="cancelExport">Go back</button><button class="btn pri" id="confirmExport">Download CSV</button></div>
+  </div>
+</div>
 <script>
-'use strict';
-var raw=null,out=null,changeReport=[],fname='data-clean.csv',MAX_FILE=50*1024*1024,$=function(i){return document.getElementById(i)};
-function setStatus(s){$('status').textContent=s||''}
-function parse(t,dl){
- dl=dl||',';t=t.replace(/^\uFEFF/,'');var rows=[],row=[],f='',quoted=false,afterQuote=false,i=0,c,recordStart=1;
- for(;i<t.length;i++){c=t[i];
-  if(quoted){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else{quoted=false;afterQuote=true}}else f+=c;continue}
-  if(afterQuote){if(c===dl){row.push(f);f='';afterQuote=false;continue}if(c==='\n'||c==='\r'){row.push(f);rows.push(row);row=[];f='';afterQuote=false;if(c==='\r'&&t[i+1]==='\n')i++;recordStart=i+2;continue}if(c===' '||c==='\t'){continue}throw new Error('Unexpected character after a closing quote near line '+recordStart+'. Check the CSV quoting.');}
-  if(c==='"'){if(f!=='')throw new Error('A quote appeared in the middle of an unquoted cell near line '+recordStart+'. Check the CSV quoting.');quoted=true}
-  else if(c===dl){row.push(f);f=''}
-  else if(c==='\n'||c==='\r'){row.push(f);rows.push(row);row=[];f='';if(c==='\r'&&t[i+1]==='\n')i++;recordStart=i+2}
-  else f+=c;
- }
- if(quoted)throw new Error('The file ends inside a quoted cell. Check the CSV quoting.');
- if(afterQuote||f!==''||row.length){row.push(f);rows.push(row)}
- while(rows.length&&rows[rows.length-1].every(function(v){return v===''}))rows.pop();
- return rows;
+// ==core==
+const STOP=new Set('ltd limited llc inc incorporated corp corporation co company pvt private pty plc llp gmbh sa srl bv the and of'.split(' '));
+function detectDelim(t){const head=t.split(/\r?\n/).slice(0,5).join('\n');let best=',',bc=-1;for(const d of [',',';','\t','|']){const c=head.split(d).length-1;if(c>bc){bc=c;best=d}}return best}
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const delim=detectDelim(text);const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;
+    else if(c===delim){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);f='';rows.push(row);row=[]}
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  const clean=rows.filter(r=>r.length>1||(r[0]||'').trim()!=='');
+  const header=clean.shift()||[];const w=header.length;
+  return {delim,header,rows:clean.map(r=>{r=r.slice(0,Math.max(w,r.length));while(r.length<w)r.push('');return r})};
 }
-function countDelimiters(text,delimiter){var q=false,n=0;for(var i=0;i<text.length;i++){var c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){i++;continue}q=!q}else if(!q&&c===delimiter)n++}return n}
-function sniff(t){var sample=t.slice(0,20000),candidates=[',',';','\t'],best=',',score=-1; candidates.forEach(function(d){var count=countDelimiters(sample,d);if(count>score){score=count;best=d}});return best}
-function csvSafe(v){v=String(v==null?'':v);var signedNumber=v===v.trim()&&/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(v);if((/^[\s\u0000-\u001f]*[=+@-]/.test(v)||/^[\t\r]/.test(v))&&!signedNumber)v="'"+v;return v}
-function esc(v){v=csvSafe(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
-function toCsv(rows){return rows.map(function(r){return r.map(esc).join(',')}).join('\r\n')}
-function uniqueHeader(base,head){var name=base,n=2;while(head.some(function(h){return String(h).toLowerCase()===name.toLowerCase()})){name=base+'_'+n++}return name}
-function detect(head,data){return head.map(function(h,i){if(/e-?mail/i.test(h))return 'email';var vals=data.map(function(r){return r[i]||''}).filter(Boolean);if(!vals.length)return 'text';var ph=vals.filter(function(v){var n=v.replace(/\D/g,'').length;return n>=7&&n<=15&&/^[+\d\s()\-.\/]+$/.test(v)}).length;if(/phone|mobile|\btel\b|contact|cell|whatsapp/i.test(h)&&vals.filter(function(v){return v.replace(/\D/g,'').length>=7}).length/vals.length>=.5)return 'phone';if(!/\bid\b|zip|postal|code|ref|invoice|amount|price|qty|total|rating|date/i.test(h)&&vals.length>=2&&ph/vals.length>=.8)return 'phone';return 'text'})}
-function addChange(list,row,col,oldVal,newVal,action){list.push({row:row,column:col,original:oldVal,cleaned:newVal,action:action})}
-function clean(rows,o){
- var log=[],changes=[],head=rows[0].map(function(v){return String(v==null?'':v)}),data=rows.slice(1).map(function(r){return r.map(function(v){return String(v==null?'':v)})}),sourceRows=data.map(function(_,i){return i+2}),before=data.length,nBlank=0,nDup=0,originalWidth=head.length;
- var width=Math.max(originalWidth,data.reduce(function(m,r){return Math.max(m,r.length)},originalWidth));
- while(head.length<width)head.push('column_'+(head.length+1));
- data.forEach(function(r){while(r.length<width)r.push('')});
- if(o.trim){var n=0;data.forEach(function(r,ri){r.forEach(function(v,ci){var t=v.replace(/\s+/g,' ').trim();if(t!==v){addChange(changes,sourceRows[ri],head[ci],v,t,'trimmed whitespace');r[ci]=t;n++}})});if(n)log.push('trimmed spaces in '+n+' cells')}
- if(o.blank){var kept=[],keptSource=[];data.forEach(function(r,ri){if(r.some(function(v){return v.trim()!==''})){kept.push(r);keptSource.push(sourceRows[ri])}else{nBlank++;addChange(changes,sourceRows[ri],'(entire row)',r.join(' | '),'','removed blank row')}});data=kept;sourceRows=keptSource;if(nBlank)log.push('removed '+nBlank+' blank rows')}
- var types=o.types||detect(head,data),phoneCols=[],mailCols=[];types.forEach(function(t,i){if(t==='phone')phoneCols.push(i);if(t==='email')mailCols.push(i)});
- var issues=data.map(function(){return[]});
- if(o.phone&&phoneCols.length){var fixed=0,bad=0,cc=o.cc.replace(/\D/g,'');
-  data.forEach(function(r,ri){phoneCols.forEach(function(ci){var v=r[ci]||'';if(!v)return;var suffix=phoneCols.length>1?' ('+head[ci]+')':'';
-   if(!/^[+\d\s().\-/]+$/.test(v)||!/[0-9]/.test(v)){issues[ri].push('not a simple phone number'+suffix);bad++;return}
-   if(/(?:\/|,|;|\bor\b)\s*[+(\d]/i.test(v)){issues[ri].push('multiple numbers in one cell'+suffix);bad++;return}
-   var d=v.replace(/[\s().\-/]/g,'');if(d.indexOf('00')===0)d='+'+d.slice(2);var digits=d.replace(/\D/g,'');
-   if(d.charAt(0)==='+'){if(digits.length<8||digits.length>15){issues[ri].push('check phone length'+suffix);bad++;return}}
-   else if(digits.charAt(0)==='0'){if(cc.length<1||cc.length>4){issues[ri].push('check country code'+suffix);bad++;return}d='+'+cc+digits.slice(1);digits=d.replace(/\D/g,'')}
-   else if(cc&&digits.indexOf(cc)===0&&digits.length>=10){d='+'+digits}
-   else if(cc==='92'&&digits.length===10&&digits.charAt(0)==='3'){d='+92'+digits;digits=d.replace(/\D/g,'')}
-   else{issues[ri].push('phone needs a country code or leading 0'+suffix);bad++;return}
-   if(digits.length<8||digits.length>15||(d.indexOf('+92')===0&&digits.length!==12)){issues[ri].push('check phone length'+suffix);bad++;return}
-   if(d!==v){r[ci]=d;addChange(changes,sourceRows[ri],head[ci],v,d,'standardized phone');fixed++}
-  })});log.push('standardized '+fixed+' phone numbers'+(bad?'; flagged '+bad+' numbers to check':''))
- }else if(o.phone)log.push('no column is set to phone');
- if(o.mail&&mailCols.length){var lc=0,inv=0;data.forEach(function(r,ri){mailCols.forEach(function(ci){var v=r[ci]||'';if(!v)return;var l=v.toLowerCase();if(l!==v){r[ci]=l;addChange(changes,sourceRows[ri],head[ci],v,l,'lowercased email');lc++}if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(l)){issues[ri].push('check email format'+(mailCols.length>1?' ('+head[ci]+')':''));inv++}})});log.push('lowercased '+lc+' emails'+(inv?'; flagged '+inv+' email formats to check':''))}
- else if(o.mail)log.push('no column is set to email');
- if(o.dup){var seen=new Set(),keep=[],ki=[],keepSource=[];data.forEach(function(r,ri){var key=JSON.stringify(r.map(function(v){return v.toLowerCase()}));if(seen.has(key)){nDup++;addChange(changes,sourceRows[ri],'(entire row)',r.join(' | '),'','removed duplicate row')}else{seen.add(key);keep.push(r);ki.push(issues[ri]);keepSource.push(sourceRows[ri])}});data=keep;issues=ki;sourceRows=keepSource;if(nDup)log.push('removed '+nDup+' duplicate rows')}
- var flagged=issues.filter(function(x){return x.length}).length,attentionIndex=-1;
- if(flagged){var attentionName=uniqueHeader('needs_attention',head);attentionIndex=head.length;head.push(attentionName);data.forEach(function(r,i){var issueText=issues[i].join('; ');r.push(issueText);if(issueText)addChange(changes,sourceRows[i],attentionName,r.slice(0,-1).join(' | '),issueText,'flagged for review')});log.push('added '+attentionName+' column for '+flagged+' rows that need review')}
- if(!log.length)log.push('nothing needed fixing');
- return{rows:[head].concat(data),log:log,before:before,after:data.length,blank:nBlank,dup:nDup,flagged:flagged,changes:changes,attentionIndex:attentionIndex};
+function norm(s){
+  s=String(s).normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}\s]/gu,' ');
+  const all=s.split(/\s+/).filter(Boolean);const kept=all.filter(t=>!STOP.has(t));
+  return kept.length?kept:all;
 }
-function ready(f,info){if(!raw||raw.length<1||!raw[0].length){raw=null;$('drop').querySelector('b').textContent='that file looks empty';$('drop').querySelector('span').textContent='try another one';$('go').disabled=true;return} $('drop').querySelector('b').textContent=f.name;$('drop').querySelector('span').textContent=(raw.length-1)+' rows, '+raw[0].length+' columns'+(info?' ('+info+')':'');$('go').disabled=raw.length<2;$('res').style.display='none';buildMap()}
-function buildMap(){if(!raw||raw.length<2){$('map').style.display='none';return}var head=raw[0],data=raw.slice(1),t=detect(head,data);$('mapList').innerHTML='';head.forEach(function(h,i){var d=document.createElement('div'),sp=document.createElement('span'),se=document.createElement('select');sp.textContent=h||'(no name)';sp.title=h;[['text','leave alone'],['phone','phone'],['email','email']].forEach(function(o){var op=document.createElement('option');op.value=o[0];op.textContent=o[1];if(t[i]===o[0])op.selected=true;se.appendChild(op)});se.setAttribute('aria-label','column type for '+(h||'column '+(i+1)));d.appendChild(sp);d.appendChild(se);$('mapList').appendChild(d)});$('map').style.display='block'}
-function getCC(){var v=$('ccSel').value;return v==='other'?($('cc').value||'+'):v}$('ccSel').onchange=function(){$('cc').style.display=this.value==='other'?'inline-block':'none'};
-function load(f){if(!f)return;setStatus('');if(f.size>MAX_FILE){setStatus('That file is larger than 50 MB. Try a smaller file or split it into parts.');return}fname=f.name.replace(/\.[^.]+$/,'')+'-clean.csv';raw=null;out=null;changeReport=[];$('go').disabled=true;$('res').style.display='none';var r=new FileReader(),isX=/\.(xlsx|xls)$/i.test(f.name);
- r.onerror=function(){setStatus('The file could not be read. Try again or save it in another format.');$('drop').querySelector('b').textContent='could not read that file'};
- if(isX){if(typeof XLSX==='undefined'){setStatus('Excel support needs an internet connection. Save the sheet as CSV and try again.');return}r.onload=function(){try{var wb=XLSX.read(r.result,{type:'array'});if(!wb.SheetNames.length)throw new Error('No worksheet found');var ws=wb.Sheets[wb.SheetNames[0]];raw=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''}).map(function(x){return x.map(function(v){return String(v==null?'':v)})});var w=raw.reduce(function(m,x){return Math.max(m,x.length)},0);raw=raw.map(function(x){while(x.length<w)x.push('');return x});ready(f,'sheet "'+wb.SheetNames[0]+'"'+(wb.SheetNames.length>1?', first of '+wb.SheetNames.length+' sheets':''))}catch(e){raw=null;setStatus('Could not read that Excel file: '+e.message);$('drop').querySelector('b').textContent='could not read that excel file'}};r.readAsArrayBuffer(f)}
- else{r.onload=function(){try{var t=r.result,d=sniff(t);raw=parse(t,d);ready(f,d===';'?'semicolon-separated':d==='\t'?'tab-separated':'comma-separated')}catch(e){raw=null;setStatus(e.message);$('drop').querySelector('b').textContent='could not read that CSV';$('drop').querySelector('span').textContent='check the file format and try again'}};r.readAsText(f)}
+const mk=v=>{const toks=norm(v);return {toks,key:toks.join(' ')}};
+function reviewGroup(idxs, ci) {
+  const values = idxs.map(i => String(DATA.rows[i][ci] || ''));
+  const classes = values.map(raw => {
+    const match = raw.match(/\(\s*class\s+([A-Z])\s*\)\s*$/i);
+    if (!match) return null;
+    const base = raw.replace(/\s*\(\s*class\s+[A-Z]\s*\)\s*$/i, '');
+    return {letter:match[1].toUpperCase(),base:norm(base).join(' ')};
+  }).filter(Boolean);
+  if (classes.length >= 2 && new Set(classes.map(x => x.letter)).size > 1 && new Set(classes.map(x => x.base)).size === 1) {
+    return {type:'share-class', message:'Possible distinct share classes. Review this group; rows are preserved by default.'};
+  }
+  const keys = values.map(v => mk(v).key);
+  const surfaces = values.map(v => {
+    const tokens = String(v).normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(Boolean);
+    // "The" is already a stop word in matching; don't flag it as a meaningful name variation at the edges.
+    while (tokens[0] === 'the') tokens.shift();
+    while (tokens[tokens.length - 1] === 'the') tokens.pop();
+    return tokens.join(' ');
+  });
+  if (new Set(keys).size === 1 && new Set(surfaces).size > 1) {
+    return {type:'name-variation', message:'Possible company-name variation (for example, a legal suffix or extra word). Review before removing rows.'};
+  }
+  let minSim = 1;
+  for (let a=0; a<values.length; a++) for (let b=a+1; b<values.length; b++) minSim = Math.min(minSim, sim(mk(values[a]),mk(values[b])));
+  if (minSim < 0.90) {
+    return {type:'fuzzy-match', message:'Fuzzy spelling match. Check that these are the same entity before removing rows.'};
+  }
+  return null;
 }
-$('file').onchange=function(){load(this.files[0])};var dz=$('drop');['dragover','dragenter'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.add('over')})});['dragleave','drop'].forEach(function(e){dz.addEventListener(e,function(){dz.classList.remove('over')})});dz.addEventListener('drop',function(ev){ev.preventDefault();load(ev.dataTransfer.files[0])});
-function cellText(v){return String(v==null?'':v)}
-$('go').onclick=function(){if(!raw)return;try{var o={trim:$('oTrim').checked,blank:$('oBlank').checked,dup:$('oDup').checked,phone:$('oPhone').checked,mail:$('oMail').checked,cc:getCC(),types:Array.prototype.map.call($('mapList').querySelectorAll('select'),function(x){return x.value})};var copy=raw.map(function(r){return r.slice()}),res=clean(copy,o);out=res.rows;changeReport=res.changes;
- $('rBefore').textContent=res.before;$('rAfter').textContent=res.after;$('rStats').innerHTML=[[res.after-res.flagged,'clean'],[res.flagged,'need review'],[res.dup,'duplicates removed'],[res.blank,'blank rows removed']].map(function(x){return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('');$('rLog').innerHTML='';res.log.forEach(function(l){var li=document.createElement('li');li.textContent=l;$('rLog').appendChild(li)});
- var body=out.slice(1),fl=res.attentionIndex>=0?body.filter(function(r){return !!r[res.attentionIndex]}):[],ok=res.attentionIndex>=0?body.filter(function(r){return !r[res.attentionIndex]}):body,pv=[out[0]].concat(fl,ok).slice(0,11),h='';pv.forEach(function(r,i){h+='<tr>';r.forEach(function(v,ci){var d=document.createElement('div');d.textContent=cellText(v);var flagged=res.attentionIndex>=0&&i>0&&ci===res.attentionIndex&&v;h+=(i?'<td'+(flagged?' class="flag"':'')+'>':'<th>')+d.innerHTML+(i?'</td>':'</th>')});h+='</tr>'});$('pvNote').textContent=fl.length?fl.length+' rows need a look (shown first), then rows that were fine:':'preview of the first rows:';$('rTab').innerHTML=h;$('reportNote').textContent=changeReport.length?changeReport.length+' individual changes or removed rows are included in the change report.':'No individual changes were needed.';$('res').style.display='block';$('res').scrollIntoView({behavior:'smooth',block:'start'});
- }catch(e){setStatus('Cleaning stopped because of an unexpected issue: '+e.message)}};
-function downloadBlob(blob,name){var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)}
-$('dl').onclick=function(){if(!out)return;downloadBlob(new Blob(['\uFEFF'+toCsv(out)],{type:'text/csv;charset=utf-8'}),fname)};
-$('dlx').onclick=function(){if(!out)return;if(typeof XLSX==='undefined'){alert('Excel download needs an internet connection. Use the CSV download instead.');return}try{var safe=out.map(function(r){return r.map(csvSafe)}),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(safe),'cleaned');XLSX.writeFile(wb,fname.replace(/\.csv$/i,'.xlsx'))}catch(e){alert('Could not create the Excel file. Try the CSV download instead.')}};
-$('dlReport').onclick=function(){if(!out)return;var rows=[['source row','column','action','original value','cleaned value']].concat(changeReport.map(function(c){return[c.row,c.column,c.action,c.original,c.cleaned]}));downloadBlob(new Blob(['\uFEFF'+toCsv(rows)],{type:'text/csv;charset=utf-8'}),fname.replace(/-clean\.csv$/,'')+'-change-report.csv')};
+function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let pp=null,prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const cur=[i];
+    for(let j=1;j<=n;j++){let v=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(pp&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,pp[j-2]+1); // two swapped letters = one typo
+      cur[j]=v}
+    pp=prev;prev=cur}
+  return prev[n]}
+function sim(x,y){
+  if(!x.key||!y.key)return 0;if(x.key===y.key)return 1;
+  const nums=t=>t.filter(w=>/\d/.test(w)).sort().join('|');
+  if(nums(x.toks)!==nums(y.toks))return 0; // Plant 1 vs Plant 2 are different
+  const sa=new Set(x.toks),sb=new Set(y.toks);let inter=0;for(const t of sa)if(sb.has(t))inter++;
+  const jac=inter/(sa.size+sb.size-inter);
+  const ls=1-lev(x.key,y.key)/Math.max(x.key.length,y.key.length);
+  const ks=x.toks.slice().sort().join(' '),kt=y.toks.slice().sort().join(' ');
+  const lt=1-lev(ks,kt)/Math.max(ks.length,kt.length);
+  return Math.max(jac,ls,lt);
+}
+function cluster(values,th,allowPair=()=>true){
+  const items=values.map(mk);const parent=items.map((_,i)=>i);
+  const find=x=>{while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x]}return x};
+  const uni=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[b]=a};
+  // For normal-sized files, compare every eligible pair so prefix blocking cannot
+  // silently hide a valid match. Very large files use indexed candidate generation
+  // to avoid an O(n²) browser freeze; the UI and audit report disclose this trade-off.
+  if(values.length<=1000){
+    for(let i=0;i<items.length;i++){
+      if(!items[i].key)continue;
+      for(let j=i+1;j<items.length;j++){
+        if(!items[j].key||!allowPair(i,j))continue;
+        if(sim(items[i],items[j])>=th)uni(i,j);
+      }
+    }
+  }else{
+    const idx=new Map();
+    items.forEach((it,i)=>{if(!it.key)return;const ks=new Set();it.toks.forEach(t=>ks.add('T'+t.slice(0,4)));ks.add('K'+it.key.slice(0,3));
+      ks.forEach(k=>{if(!idx.has(k))idx.set(k,[]);idx.get(k).push(i)})});
+    const seen=new Set();
+    for(const list of idx.values()){
+      // Oversized buckets are split by the full first token/key prefix rather than
+      // compared as one enormous quadratic block. Some recall trade-off remains
+      // for very large files and is explicitly disclosed in the interface/report.
+      const buckets=new Map();
+      for(const i of list){const it=items[i];const sub=it.toks[0]||it.key.slice(0,3);if(!buckets.has(sub))buckets.set(sub,[]);buckets.get(sub).push(i)}
+      const candidates=list.length<=400?[list]:[...buckets.values()];
+      for(const part of candidates)for(let a=0;a<part.length;a++)for(let b=a+1;b<part.length;b++){
+        const i=Math.min(part[a],part[b]),j=Math.max(part[a],part[b]),id=i+'|'+j;if(seen.has(id))continue;seen.add(id);
+        if(allowPair(i,j)&&sim(items[i],items[j])>=th)uni(i,j);
+      }
+    }
+  }
+  const groups=new Map();
+  items.forEach((it,i)=>{if(!it.key)return;const r=find(i);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(i)});
+  return [...groups.values()].filter(g=>g.length>1);
+}
+function toCSV(rows,delim,spreadsheetSafe=true){return rows.map(r=>r.map(c=>{
+  c=String(c==null?'':c);
+  // CSV quoting protects structure, not spreadsheet formula execution. Prefix a
+  // literal apostrophe when a cell could be interpreted as a formula by common
+  // spreadsheet applications. Original in-memory data is never changed.
+  const phoneLike=/^\+[\d\s().\-]{5,}$/.test(c); // +44 20 7946 0101 is a phone number, not a formula
+  const formulaLike=!phoneLike&&(/^[\t\r\n ]*[=+@]/.test(c) || (/^[\t\r\n ]*-/.test(c) && !/^[\t\r\n ]*-\d+(?:\.\d+)?$/.test(c)));
+  if(spreadsheetSafe && formulaLike)c="'"+c;
+  return /["\n\r]/.test(c)||c.includes(delim)?'"'+c.replace(/"/g,'""')+'"':c
+}).join(delim)).join('\r\n')}
+function guessColumn(header,rows){
+  const byName=header.findIndex(h=>/company|organi[sz]ation|business|firm|client|exhibitor|account|security|issuer|vendor|supplier|customer|employer|brand|name/i.test(h));
+  if(byName>=0)return byName;
+  let best=0,bs=-1;
+  header.forEach((h,c)=>{const v=rows.map(r=>String(r[c]||'').trim()).filter(Boolean);if(!v.length)return;
+    if(v.filter(x=>/^[\d\s.,:\/\-+]+$/.test(x)||x.includes('@')).length/v.length>0.5)return;
+    const distinct=new Set(v.map(x=>x.toLowerCase())).size/v.length,avg=v.reduce((a,x)=>a+x.length,0)/v.length;
+    const sc=distinct*Math.min(avg,30);if(sc>bs){bs=sc;best=c}});
+  return best;
+}
+function looksLikeCodes(vals){const v=vals.map(x=>String(x||'').trim()).filter(Boolean);if(!v.length)return false;
+  const avg=v.reduce((a,x)=>a+x.length,0)/v.length,num=v.filter(x=>/^[\d\s.,:\/\-+]+$/.test(x)).length/v.length;return avg<=6||num>0.5}
+// ==end core==
+const $=id=>document.getElementById(id);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+let DATA=null,GROUPS=[],ACTIVE_IDS=[];
+let undoStack=[],redoStack=[],lastReviewGroupIndex=-1;
+function snapshot(){return GROUPS.map(g=>({keep:g.keep,ignore:g.ignore,reviewed:!!g.reviewed}))}
+function restoreSnapshot(s){GROUPS.forEach((g,i)=>{g.keep=s[i].keep;g.ignore=s[i].ignore;g.reviewed=!!s[i].reviewed});draw(+$('col').value);updateHistoryButtons()}
+function rememberChange(){undoStack.push(snapshot());if(undoStack.length>100)undoStack.shift();redoStack=[];updateHistoryButtons()}
+function updateHistoryButtons(){$('undo').disabled=!undoStack.length;$('redo').disabled=!redoStack.length}
+function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restoreSnapshot(undoStack.pop())}
+function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restoreSnapshot(redoStack.pop())}
+function decisionChanged(g){return g.ignore!==g.defaultIgnore || g.keep!==g.defaultKeep}
+function unresolvedReview(g){return !!g.review && !g.reviewed}
+function matchesFilter(g,filter,query,ci){
+  const names=g.idxs.map(i=>String(DATA.rows[i][ci]||'')).join(' ').toLowerCase();
+  if(query&&!names.includes(query))return false;
+  if(filter==='likely'&&g.review)return false;
+  if(filter==='review'&&(!g.review||g.review.type==='share-class'))return false;
+  if(filter==='share-class'&&(!g.review||g.review.type!=='share-class'))return false;
+  if(filter==='preserved'&&!g.ignore)return false;
+  if(filter==='remove'&&(g.ignore||g.idxs.every(i=>i===g.keep)))return false;
+  if(filter==='changed'&&!decisionChanged(g))return false;
+  if(filter==='unresolved'&&!unresolvedReview(g))return false;
+  return true;
+}
+function matchExplanation(g,ci){
+  if(g.review?.type==='share-class')return 'Share-class labels differ';
+  // Preserve the original cell text: trimming first hides exactly the whitespace
+  // differences this explanation is intended to make transparent.
+  const raw=g.idxs.map(i=>String(DATA.rows[i][ci]??''));
+  if(new Set(raw).size===1)return 'Exact same name text';
+  const details=[];
+  const has=(re)=>raw.some(v=>re.test(v));
+  if(has(/^\s|\s$/u))details.push('leading/trailing whitespace');
+  if(has(/ {2,}/u))details.push('multiple consecutive spaces');
+  if(has(/\t/u))details.push('tab character');
+  if(has(/[\r\n]/u))details.push('line break');
+  if(has(/\u00A0/u))details.push('non-breaking space');
+  if(has(/[\u200B-\u200D\u2060\uFEFF]/u))details.push('zero-width / invisible Unicode character');
+  if(details.length){
+    const cleaned=raw.map(v=>v.replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim());
+    if(new Set(cleaned).size===1)return 'Whitespace / invisible character difference: '+details.join(', ');
+  }
+  const visible=raw.map(v=>v.normalize('NFKC').replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim());
+  if(new Set(visible).size===1){
+    const compat=raw.some((v,i)=>v.normalize('NFKC')!==v && v.normalize('NFKC')===raw[0].normalize('NFKC'));
+    return compat?'Unicode compatibility-character difference':'Whitespace / formatting difference';
+  }
+  const lower=visible.map(v=>v.toLocaleLowerCase());
+  if(new Set(lower).size===1)return 'Capitalization difference';
+  const plain=visible.map(v=>v.normalize('NFKD').replace(/\p{M}/gu,'').toLocaleLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\s+/g,' ').trim());
+  if(new Set(plain).size===1)return 'Punctuation / formatting difference';
+  const words=visible.map(v=>v.normalize('NFKD').replace(/\p{M}/gu,'').toLocaleLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/).filter(Boolean));
+  const sameWords=(a,b)=>a.length===b.length&&a.every((w,i)=>w===b[i]);
+  if(words.some((a,i)=>words.some((b,j)=>i!==j&&sameWords(a[0]==='the'?a.slice(1):a,b))))return 'Leading word difference (The)';
+  const aliases={ltd:'limited',limited:'limited',llc:'llc',inc:'incorporated',incorporated:'incorporated',corp:'corporation',corporation:'corporation',co:'company',company:'company',pvt:'private',private:'private',pty:'proprietary',plc:'plc',llp:'llp',gmbh:'gmbh',sa:'sa',srl:'srl',bv:'bv'};
+  const canonicalWords=words.map(a=>a.map(w=>aliases[w]||w));
+  const canonical=canonicalWords.map(a=>a.join(' '));
+  if(new Set(canonical).size===1)return 'Legal suffix difference';
+  const legalTail=new Set(['limited','incorporated','corporation','company','private','proprietary','plc','llp','gmbh','sa','srl','bv','llc']);
+  const stripLegalTail=a=>{const out=a.slice();while(out.length>1&&legalTail.has(out[out.length-1]))out.pop();return out.join(' ')};
+  if(new Set(canonicalWords.map(stripLegalTail)).size===1)return 'Legal suffix difference';
+  const keys=raw.map(v=>mk(v).key);
+  if(new Set(keys).size===1)return 'Legal suffix / extra-word difference';
+  if(g.review?.type==='fuzzy-match')return 'Possible spelling variation';
+  if(g.review?.type==='name-variation')return 'Possible company-name variation';
+  return 'Normalized names are highly similar';
+}
+function showHiddenCharacters(value){
+  return String(value??'').replace(/\u00A0/g,'⟦NBSP⟧').replace(/\u200B/g,'⟦U+200B ZERO WIDTH SPACE⟧').replace(/\u200C/g,'⟦U+200C ZERO WIDTH NON-JOINER⟧').replace(/\u200D/g,'⟦U+200D ZERO WIDTH JOINER⟧').replace(/\u2060/g,'⟦U+2060 WORD JOINER⟧').replace(/\uFEFF/g,'⟦U+FEFF ZERO WIDTH NO-BREAK SPACE⟧').replace(/\t/g,'⟦TAB⟧').replace(/\r/g,'⟦CR⟧').replace(/\n/g,'⟦LF⟧').replace(/ /g,'·');
+}
+function addVisibleValue(cell,value,showMarkers){
+  cell.textContent=String(value||'—');
+  if(showMarkers){const marker=el('div','hidden-char-detail','Visible markers: '+showHiddenCharacters(value));cell.appendChild(marker)}
+}
+function groupSimilarity(g,ci){
+  let min=1;for(let a=0;a<g.idxs.length;a++)for(let b=a+1;b<g.idxs.length;b++)min=Math.min(min,sim(mk(DATA.rows[g.idxs[a]][ci]),mk(DATA.rows[g.idxs[b]][ci])));return Math.round(min*100);
+}
+function similarityLabel(g,ci){const score=groupSimilarity(g,ci);return score===100?'100% normalized name match':score+'% name similarity';}
+
+function hint(){const ci=+$('col').value;$('colhint').textContent=looksLikeCodes(DATA.rows.map(r=>r[ci]))?'This column looks like short codes or numbers, not names. Pick the column that holds the names.':'';populateIdColumns()}
+function populateIdColumns(){if(!DATA)return;const sel=$('ids'),old=new Set(Array.from(sel.selectedOptions).map(o=>o.value)),ci=+$('col').value;sel.innerHTML='';DATA.header.forEach((h,i)=>{if(i===ci)return;const o=el('option',null,(h||('column '+(i+1)))+'');o.value=String(i);o.selected=old.has(o.value);sel.appendChild(o)})}
+function selectedIds(){return Array.from($('ids').selectedOptions).map(o=>+o.value)}
+function idsMatch(i,j,cols){if(!cols.length)return true;return cols.every(c=>{const a=String(DATA.rows[i][c]??'').trim(),b=String(DATA.rows[j][c]??'').trim();return a!==''&&b!==''&&a===b})}
+const SAMPLE='company,country,contact\nAcme Ltd,UK,anna@acme.com\nACME Limited,UK,\n"Acme, Inc.",US,\nThe Acme Company,United Kingdom,sales@acme.com\nGlobex Corporation,US,hank@globex.com\nGlobex Corp,US,\nInitech,US,peter@initech.com\nInitrode,US,\nUmbrella Pvt Ltd,PK,\nUmbrela Pvt. Ltd,PK,uma@umbrella.pk\nWayne Enterprises,US,\nStark Industries,US,tony@stark.com\n';
+function load(text,name){
+  DATA=parseCSV(text);
+  if(!DATA.header.length||!DATA.rows.length){$('status').textContent='That file has no rows I can read.';return}
+  $('status').textContent=name+': '+DATA.rows.length+' rows, '+DATA.header.length+' columns.';
+  const sel=$('col');sel.innerHTML='';
+  DATA.header.forEach((h,i)=>{const o=el('option',null,h||('column '+(i+1)));o.value=i;sel.appendChild(o)});
+  sel.value=guessColumn(DATA.header,DATA.rows);populateIdColumns();hint();
+  $('cfg').classList.remove('hide');$('out').classList.add('hide');
+}
+$('f').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>load(String(r.result),f.name);r.readAsText(f)});
+$('sample').addEventListener('click',()=>load(SAMPLE,'sample list'));
+$('th').addEventListener('input',e=>{$('thv').textContent=e.target.value+'%'});
+$('col').addEventListener('change',hint);
+function runMatch(){
+  const ci=+$('col').value,th=+$('th').value/100,ids=selectedIds();
+  undoStack=[];redoStack=[];updateHistoryButtons();
+  const vals=DATA.rows.map(r=>r[ci]||'');
+  GROUPS=cluster(vals,th,(i,j)=>idsMatch(i,j,ids)).map(idxs=>{
+    let best=idxs[0],bf=-1;
+    for(const i of idxs){const f=DATA.rows[i].filter(c=>String(c).trim()!=='').length;if(f>bf){bf=f;best=i}}
+    const review=reviewGroup(idxs,ci);
+    return {idxs,keep:best,defaultKeep:best,ignore:!!review,defaultIgnore:!!review,review,reviewed:false};
+  });
+  GROUPS.sort((a,b)=>b.idxs.length-a.idxs.length);
+  ACTIVE_IDS=ids.slice();
+  $('matchMethodNote').textContent=DATA.rows.length<=1000?'This file used exhaustive pairwise comparisons, so prefix blocking did not skip candidate pairs. Similarity is still a clue, not proof of identity.':'Large-file mode uses indexed candidate blocking to keep the browser responsive; some similar pairs may not be compared. Review carefully before removing rows.';
+  draw(ci);$('out').classList.remove('hide');
+}
+$('go').addEventListener('click',()=>{
+  const st=$('status'),prev=st.textContent;st.textContent='Comparing '+DATA.rows.length+' rows… large lists can take a few seconds';$('go').disabled=true;
+  setTimeout(()=>{try{runMatch()}finally{$('go').disabled=false;st.textContent=prev}},30);
+});
+$('approveVariations').addEventListener('click',()=>{
+  const t=GROUPS.filter(g=>g.review&&g.review.type==='name-variation'&&!g.reviewed);if(!t.length)return;
+  rememberChange();t.forEach(g=>{g.ignore=false;g.reviewed=true});stats();updateHistoryButtons();draw(+$('col').value);
+});
+function draw(ci){
+  const box=$('groups');box.innerHTML='';
+  const query=$('searchGroups').value.trim().toLowerCase();
+  const filter=$('filterGroups').value;
+  const visible=GROUPS.map((g,n)=>({g,n})).filter(({g})=>matchesFilter(g,filter,query,ci));
+  $('filterCount').textContent='Showing '+visible.length+' of '+GROUPS.length+' groups';
+  const unresolvedCount=GROUPS.filter(unresolvedReview).length;const nextBtn=$('nextReview');nextBtn.textContent=unresolvedCount?'Review next group needing review · '+unresolvedCount:'All flagged groups reviewed ✓';nextBtn.disabled=!unresolvedCount;const nv=GROUPS.filter(g=>g.review&&g.review.type==='name-variation'&&!g.reviewed).length;$('approveVariations').textContent=nv?'Approve all name variations · '+nv:'Approve all name variations';$('approveVariations').disabled=!nv;
+  if(!GROUPS.length)box.appendChild(el('div','note','No near-duplicates at this similarity. Try lowering it a little.'));
+  else if(!visible.length)box.appendChild(el('div','note','No groups match these filters. Try a different search or filter.'));
+  visible.forEach(({g,n})=>{
+    const changed=decisionChanged(g);const share=g.review?.type==='share-class';const d=el('div','grp'+(g.ignore?' ign':'')+(g.review?' flagged':'')+(share?' shareflag':'')+(changed?' changed':''));
+    d.dataset.groupIndex=String(n);
+    const h=el('div','gh');h.appendChild(el('span',null,'GROUP '+String(n+1).padStart(2,'0')+' · '+g.idxs.length+' rows'));
+    const lab=el('label');lab.style.margin='0';const cb=document.createElement('input');cb.type='checkbox';cb.checked=g.ignore;
+    cb.onchange=()=>{rememberChange();g.ignore=cb.checked;if(g.review)g.reviewed=true;stats();updateHistoryButtons();draw(ci)};
+    cb.setAttribute('aria-label','Keep all rows in group '+(n+1));cb.title='When checked, keep every row in this group in the export.';lab.className='keep-all-label';lab.append(cb,el('span',null,'Keep all rows'));lab.title='Checked: preserve all records. Unchecked: keep the selected keeper and remove other rows from the export.';lab.addEventListener('click',e=>e.stopPropagation());h.appendChild(lab);d.appendChild(h);
+    const preview=el('div','group-preview');preview.setAttribute('role','button');preview.setAttribute('tabindex','0');preview.setAttribute('aria-expanded','false');preview.setAttribute('aria-label','Inspect group '+(n+1)+': '+g.idxs.map(i=>String(DATA.rows[i][ci]||'(blank name)')).join(' and '));
+    preview.appendChild(el('div','preview-names',String(DATA.rows[g.keep][ci]||'(blank name)')));
+    preview.appendChild(el('span','preview-arrow','↔'));
+    const others=g.idxs.filter(i=>i!==g.keep).map(i=>String(DATA.rows[i][ci]||'(blank name)'));
+    preview.appendChild(el('div','preview-names',others.join(' · ')));
+    const meta=el('div','preview-meta');
+    const status=share?'Share-class warning':(g.review?'Review recommended':'Likely duplicate');
+    meta.appendChild(el('span','status-chip'+(share?' share-class':(g.review?' review':'')),status));
+    meta.appendChild(el('span','reason-chip confidence',similarityLabel(g,ci)));
+    meta.appendChild(el('span','preview-explanation',matchExplanation(g,ci)));
+    if(changed)meta.appendChild(el('span','status-chip changed','Manually changed'));if(g.reviewed&&g.review)meta.appendChild(el('span','status-chip changed','Reviewed ✓'));meta.appendChild(el('span','expand-hint','Review details ↓'));
+    preview.appendChild(meta);d.appendChild(preview);
+    const body=document.createElement('details');body.className='group-body';
+    const summary=el('summary',null,'Inspect records, choose a keeper & compare fields');summary.style.cssText='cursor:pointer;font-size:.82rem;font-weight:750;color:var(--accent);padding:0 0 10px';body.appendChild(summary);
+    const togglePreview=()=>{body.open=!body.open;preview.setAttribute('aria-expanded',String(body.open))};
+    preview.addEventListener('click',togglePreview);
+    preview.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();togglePreview()}});
+    body.addEventListener('toggle',()=>preview.setAttribute('aria-expanded',String(body.open)));
+    const badge=el('div','note',status+(changed?' · Decision manually changed':''));badge.style.textAlign='left';badge.style.fontWeight='750';badge.style.color=share?'#7c3aed':(g.review?'var(--warn)':'var(--ok)');badge.style.margin='0 0 5px';body.appendChild(badge);
+    const reason=el('div','match-reason');reason.appendChild(el('span','reason-chip',matchExplanation(g,ci)));reason.appendChild(el('span','reason-chip confidence','Minimum pair similarity: '+groupSimilarity(g,ci)+'%')); body.appendChild(reason);
+    if(g.review){const w=el('div','review-reason',g.review.message);w.style.color=share?'#7c3aed':'var(--warn)';body.appendChild(w);const reviewActions=el('div','acts');reviewActions.style.margin='8px 0 12px';const mark=el('button','btn',g.reviewed?'Reviewed ✓':'Mark this group reviewed');mark.type='button';mark.disabled=!!g.reviewed;mark.title='Marks this recommendation as reviewed without changing the current export decision.';mark.addEventListener('click',()=>{rememberChange();g.reviewed=true;draw(ci);updateHistoryButtons()});reviewActions.appendChild(mark);reviewActions.appendChild(el('span','decision-hint','Confirms you checked this group; it does not change which rows are kept.'));body.appendChild(reviewActions)}
+    const rep=mk(DATA.rows[g.keep][ci]);
+    g.idxs.forEach(i=>{
+      const row=el('div','r');const rb=document.createElement('input');rb.type='radio';rb.name='g'+n;rb.checked=(i===g.keep);rb.setAttribute('aria-label','Keep row '+(i+2));
+      rb.onchange=()=>{if(g.keep===i)return;rememberChange();g.keep=i;if(g.review)g.reviewed=true;stats();updateHistoryButtons();draw(ci)};
+      row.appendChild(rb);row.appendChild(el('span','rn','row '+(i+2)));row.appendChild(el('span',i===g.keep?'keep':'',DATA.rows[i][ci]));
+      row.appendChild(el('span','sc',Math.round(sim(rep,mk(DATA.rows[i][ci]))*100)+'%'));
+      if(i===g.keep)row.appendChild(el('span','status-chip','KEEPER'));body.appendChild(row);
+    });
+    const compare=document.createElement('details');compare.className='compare';compare.appendChild(el('summary',null,'Compare all fields side by side ('+DATA.header.length+' columns)'));
+    g.idxs.filter(i=>i!==g.keep).forEach(i=>{
+      const heading=el('div','note','Keeper: row '+(g.keep+2)+'  |  Compared: row '+(i+2));heading.style.textAlign='left';compare.appendChild(heading);
+      const table=document.createElement('table');const thead=document.createElement('thead'),trh=document.createElement('tr');
+      ['Field','Keeper · row '+(g.keep+2),'Compared · row '+(i+2)].forEach(t=>trh.appendChild(el('th',null,t)));thead.appendChild(trh);table.appendChild(thead);
+      const tbody=document.createElement('tbody');const fieldRows=DATA.header.map((field,c)=>{const tr=document.createElement('tr');const a=String(DATA.rows[g.keep][c]??''),b=String(DATA.rows[i][c]??'');tr.dataset.diff=String(a!==b);tr.appendChild(el('th',null,field||('Column '+(c+1))));const showMarkers=c===ci&&a!==b&&/^Whitespace \/|^Unicode compatibility-character difference|^Whitespace \/ formatting difference/.test(matchExplanation(g,ci));const ca=el('td',a===b?'':'diff'),cb=el('td',a===b?'':'diff');addVisibleValue(ca,a,showMarkers);addVisibleValue(cb,b,showMarkers);tr.appendChild(ca);tr.appendChild(cb);return tr});
+      const diffs=fieldRows.filter(tr=>tr.dataset.diff==='true').length;const toggle=el('button','link','Show all '+DATA.header.length+' fields');toggle.type='button';toggle.style.marginTop='10px';let showAll=false;
+      function paintRows(){tbody.innerHTML='';fieldRows.forEach(tr=>{if(showAll||tr.dataset.diff==='true')tbody.appendChild(tr)});toggle.textContent=showAll?'Show only '+diffs+' differing fields':'Show all '+DATA.header.length+' fields';if(!diffs&&!showAll)tbody.appendChild(el('tr',null,'No field differences found.'))}
+      toggle.addEventListener('click',()=>{showAll=!showAll;paintRows()});table.appendChild(tbody);paintRows();compare.appendChild(toggle);compare.appendChild(table);
+    });
+    body.appendChild(compare);d.appendChild(body);box.appendChild(d);
+  });
+  stats();
+}
+
+function reviewNextGroup(){
+  const pending=GROUPS.map((g,index)=>({g,index})).filter(x=>unresolvedReview(x.g));
+  if(!pending.length){$('filterGroups').value='all';draw(+$('col').value);return}
+  const next=pending.find(x=>x.index>lastReviewGroupIndex)||pending[0];
+  lastReviewGroupIndex=next.index;
+  $('filterGroups').value='unresolved';$('searchGroups').value='';draw(+$('col').value);
+  const card=document.querySelector('[data-group-index="'+next.index+'"]');
+  if(card){const details=card.querySelector('details.group-body');if(details){details.open=true;const preview=card.querySelector('.group-preview');if(preview)preview.setAttribute('aria-expanded','true')}card.scrollIntoView({behavior:'smooth',block:'center'});const preview=card.querySelector('.group-preview');if(preview)preview.focus({preventScroll:true})}
+}
+$('nextReview').addEventListener('click',reviewNextGroup);
+
+function removed(){const s=new Set();GROUPS.forEach(g=>{if(!g.ignore)g.idxs.forEach(i=>{if(i!==g.keep)s.add(i)})});return s}
+function stats(){const excluded=removed().size;$('s1').textContent=DATA.rows.length;$('s2').textContent=GROUPS.length;$('s3').textContent=DATA.rows.length-excluded;$('s4').textContent=excluded;const needs=GROUPS.filter(unresolvedReview).length,changed=GROUPS.filter(decisionChanged).length;$('reviewSummary').innerHTML='';$('reviewSummary').appendChild(el('span',null,'Export summary'));$('reviewSummary').appendChild(el('strong',null,(DATA.rows.length-excluded)+' kept'));$('reviewSummary').appendChild(el('span',null,'·'));$('reviewSummary').appendChild(el('strong',null,excluded+' removed'));$('reviewSummary').appendChild(el('span',null,'·'));$('reviewSummary').appendChild(el('span','unresolved',needs+' groups need review'));$('reviewSummary').appendChild(el('span',null,'·'));$('reviewSummary').appendChild(el('span',null,changed+' manually changed'));}
+function cleaned(){const rm=removed();return toCSV([DATA.header].concat(DATA.rows.filter((_,i)=>!rm.has(i))),DATA.delim)}
+function report(){
+  const ci=+$('col').value;
+  const rm=removed();
+  const removedGroups=GROUPS.filter(g=>!g.ignore);
+  const preservedGroups=GROUPS.filter(g=>g.ignore);
+  const reviewGroups=GROUPS.filter(g=>!!g.review);
+  const reviewRemoved=reviewGroups.filter(g=>!g.ignore);
+  const unresolvedCount=GROUPS.filter(unresolvedReview).length;
+  const out=[
+    'NEAR-DUPLICATE FINDER — AUDIT REPORT',
+    'File rows: '+DATA.rows.length,
+    'Match column: '+DATA.header[ci],
+    'Additional required identifier columns: '+(ACTIVE_IDS.length?ACTIVE_IDS.map(c=>DATA.header[c]).join(', '):'None (name-only matching)'),
+    'Similarity threshold: '+$('th').value+'%',
+    'Pair comparison strategy: '+(DATA.rows.length<=1000?'Exhaustive eligible pairwise comparison':'Indexed candidate blocking for large-file performance; some pairs may not be compared'),
+    'Cleaned CSV safety: formula-leading cells are prefixed with an apostrophe in the exported copy; in-memory source values remain unchanged.',
+    'Groups found: '+GROUPS.length,
+    '',
+    'ACTUAL EXPORT SUMMARY',
+    'Rows actually removed from export: '+rm.size,
+    'Rows retained in export: '+(DATA.rows.length-rm.size),
+    'Groups currently set to remove duplicates: '+removedGroups.length,
+    'Groups currently preserved: '+preservedGroups.length,
+    'Review-flagged groups manually set to remove: '+reviewRemoved.length,
+    'Review-flagged groups still needing review: '+unresolvedCount,
+    '',
+    'Important: recommendations describe match confidence. The row actions below describe what the current export will actually do.',
+    '',
+    'GROUP DETAILS',
+    ''
+  ];
+  GROUPS.forEach((g,n)=>{
+    const assessment=g.review ? (g.review.type==='share-class'?'RECOMMENDATION: REVIEW — POSSIBLE DISTINCT SHARE CLASSES':'RECOMMENDATION: REVIEW — UNCERTAIN MATCH') : 'RECOMMENDATION: LIKELY DUPLICATE';
+    const action=g.ignore?'CURRENT EXPORT ACTION: PRESERVE ALL ROWS':'CURRENT EXPORT ACTION: KEEP ONE ROW AND REMOVE THE OTHERS';
+    const changed=decisionChanged(g);
+    out.push('Group '+(n+1)+' ('+g.idxs.length+' rows)');
+    out.push(assessment);
+    out.push('Minimum pair similarity: '+groupSimilarity(g,ci)+'%');
+    out.push('Match explanation: '+matchExplanation(g,ci));
+    if(g.review)out.push('Review reason: '+g.review.message);
+    out.push(action);
+    out.push('Decision status: '+(changed?'MANUALLY CHANGED from the initial recommendation':'Initial/default decision unchanged'));
+    out.push('Review status: '+(g.review?(g.reviewed?'MARKED REVIEWED':'NOT REVIEWED'):'Not flagged for review'));
+    out.push('Keep row '+(g.keep+2)+': '+JSON.stringify(DATA.rows[g.keep][ci])+(g.keep!==g.defaultKeep?' (keeper manually changed)':''));
+    g.idxs.filter(i=>i!==g.keep).forEach(i=>{
+      const willRemove=!g.ignore;
+      out.push((willRemove?'ACTUALLY REMOVED FROM EXPORT':'RETAINED IN EXPORT')+' — row '+(i+2)+': '+JSON.stringify(DATA.rows[i][ci]));
+    });
+    if(g.ignore)out.push('All rows in this group are retained in the cleaned CSV.');
+    out.push('');
+  });
+  return out.join('\n');
+}
+async function copyText(t,btn){
+  const old=btn.textContent;
+  try{await navigator.clipboard.writeText(t);btn.textContent='Copied ✓'}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');btn.textContent='Copied ✓'}catch(_){btn.textContent='Could not copy'}ta.remove()}
+  setTimeout(()=>{btn.textContent=old},1800);
+}
+$('cp').addEventListener('click',e=>copyText(cleaned(),e.target));
+$('rp').addEventListener('click',e=>copyText(report(),e.target));
+$('auditDl').addEventListener('click',()=>{
+  try{const b=new Blob([report()],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);a.download='near-duplicate-audit-report.txt';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+  catch(e){$('status').textContent='Download is blocked here. Use "Copy audit report" instead.'}
+});
+$('undo').addEventListener('click',undo);
+$('redo').addEventListener('click',redo);
+$('searchGroups').addEventListener('input',()=>{if(DATA)draw(+$('col').value)});
+$('filterGroups').addEventListener('change',()=>{if(DATA)draw(+$('col').value)});
+function populateExportPreview(){
+  const box=$('confirmPreview');box.innerHTML='';
+  const ci=+$('col').value;
+  GROUPS.forEach((g,n)=>{
+    const card=el('div','confirm-group');
+    card.appendChild(el('b',null,'Group '+(n+1)+': '+g.idxs.map(i=>String(DATA.rows[i][ci]||'(blank name)')).join(' ↔ ')));
+    card.appendChild(el('span','preview-reason-line',matchExplanation(g,ci)+' · '+similarityLabel(g,ci)+(g.review?' · Review flagged':'')));
+    if(g.ignore){
+      card.appendChild(el('div','will-keep','KEEP ALL: '+g.idxs.map(i=>'row '+(i+2)+' “'+String(DATA.rows[i][ci]||'(blank name)')+'”').join('; ')));
+    }else{
+      card.appendChild(el('div','will-keep','KEEP: row '+(g.keep+2)+' “'+String(DATA.rows[g.keep][ci]||'(blank name)')+'”'));
+      const removing=g.idxs.filter(i=>i!==g.keep);
+      if(removing.length)card.appendChild(el('div','will-remove','REMOVE: '+removing.map(i=>'row '+(i+2)+' “'+String(DATA.rows[i][ci]||'(blank name)')+'”').join('; ')));
+    }
+    box.appendChild(card);
+  });
+  if(!GROUPS.length)box.appendChild(el('div','confirm-group','No matching groups. No rows will be removed by duplicate decisions.'));
+}
+function openExportConfirm(){
+  const rm=removed().size,needs=GROUPS.filter(unresolvedReview).length,reviewRemoving=GROUPS.filter(g=>g.review&&!g.ignore).length;
+  $('confirmKeep').textContent=DATA.rows.length-rm;$('confirmRemove').textContent=rm;$('confirmReview').textContent=needs;populateExportPreview();
+  const warning=$('confirmWarning');warning.classList.toggle('hide',needs===0&&reviewRemoving===0);
+  const notes=[];if(needs)notes.push(needs+' group(s) still have a review warning and remain on the default “keep all rows” decision.');if(reviewRemoving)notes.push(reviewRemoving+' review-flagged group(s) are currently set to remove rows. Double-check these decisions before continuing.');
+  warning.textContent=notes.join(' ');if(notes.length)warning.textContent+=' You can go back to inspect the groups or continue with the current export.';
+  $('exportConfirm').classList.remove('hide');$('cancelExport').focus();
+}
+function downloadCSV(){
+  try{const b=new Blob([cleaned()],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);a.download='cleaned.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('exportConfirm').classList.add('hide')}
+  catch(e){$('status').textContent='Download is blocked here. Use "Copy cleaned CSV" instead.'}
+}
+$('dl').addEventListener('click',openExportConfirm);
+$('cancelExport').addEventListener('click',()=>$('exportConfirm').classList.add('hide'));
+$('confirmExport').addEventListener('click',downloadCSV);
+$('exportConfirm').addEventListener('click',e=>{if(e.target===$('exportConfirm'))$('exportConfirm').classList.add('hide')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('exportConfirm').classList.add('hide')});
 </script>
 </body>
 </html>
